@@ -4,6 +4,7 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     const determinant = document.getElementById('determinant');
     const func = document.getElementById('function');
     const errorMessage = document.getElementById('error-message');
+    const resultsBody = document.getElementById('results-body');
     
     // Сбрасываем предыдущие ошибки
     determinant.classList.remove('error');
@@ -18,8 +19,10 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
             return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
         }
         
-        // Проверка, что есть хотя бы одна запятая (если больше одной строки)
+        // Разбиваем на строки по запятым, обрезаем пробелы, удаляем пустые элементы
         const strings = value.split(',').map(s => s.trim()).filter(s => s !== '');
+        
+        // Проверка, что если строк больше одной, то в вводе была хотя бы одна запятая
         if (strings.length > 1 && !/,/.test(value)) {
             return { valid: false, message: `${fieldName}: Между строками должна быть хотя бы одна запятая!` };
         }
@@ -59,6 +62,20 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
         return;
     }
     
-    // Если все проверки пройдены
-    alert(`Проверка успешна!\nДетерминанта: ${validationDet.strings.join(', ')}\nФункция: ${validationFunc.strings.join(', ')}`);
+    // Если все проверки пройдены - добавляем данные в таблицу
+    const row = document.createElement('tr');
+    
+    const detCell = document.createElement('td');
+    detCell.textContent = validationDet.strings.join(', ');
+    row.appendChild(detCell);
+    
+    const funcCell = document.createElement('td');
+    funcCell.textContent = validationFunc.strings.join(', ');
+    row.appendChild(funcCell);
+    
+    resultsBody.appendChild(row);
+    
+    // Очищаем поля ввода
+    determinant.value = '';
+    func.value = '';
 });
