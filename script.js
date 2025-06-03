@@ -14,20 +14,16 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     
     // Функция проверки последовательности строк
     const validateSequence = (value, fieldName) => {
-        // Проверка на пустую строку
         if (!value.trim()) {
             return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
         }
         
-        // Разбиваем на строки по запятым, обрезаем пробелы, удаляем пустые элементы
         const strings = value.split(',').map(s => s.trim()).filter(s => s !== '');
         
-        // Проверка, что если строк больше одной, то в вводе была хотя бы одна запятая
         if (strings.length > 1 && !/,/.test(value)) {
             return { valid: false, message: `${fieldName}: Между строками должна быть хотя бы одна запятая!` };
         }
         
-        // Проверка на повторяющиеся строки
         const seen = {};
         for (const str of strings) {
             if (seen[str]) {
@@ -41,14 +37,11 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
             seen[str] = true;
         }
         
-        // Проверка каждой строки
         for (const str of strings) {
-            // Проверка на запрещённые символы (пробелы внутри строк)
             if (/\s/.test(str)) {
                 return { valid: false, message: `${fieldName}: Строка "${str}" содержит пробелы!` };
             }
             
-            // Проверка длины строки
             if (str.length > 5) {
                 return { valid: false, message: `${fieldName}: Строка "${str}" слишком длинная (макс. 5 символов)!` };
             }
@@ -66,17 +59,19 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     if (!validationDet.valid) errors.push(validationDet.message);
     if (!validationFunc.valid) errors.push(validationFunc.message);
     
-    // Проверка на тривиальную зависимость (если нет других ошибок)
+    // Проверка на тривиальную зависимость (только если нет других ошибок)
     if (errors.length === 0) {
-        const detSet = new Set(validationDet.strings);
-        const funcSet = new Set(validationFunc.strings);
+        const detStrings = validationDet.strings;
+        const funcStrings = validationFunc.strings;
         
-        // Проверяем есть ли общие элементы
-        const intersection = [...funcSet].filter(x => detSet.has(x));
-        if (intersection.length > 0) {
-            errors.push('Тривиальная функциональная зависимость!');
-            determinant.classList.add('error');
-            func.classList.add('error');
+        // Проверяем каждый атрибут функции на наличие в детерминанте
+        for (const attr of funcStrings) {
+            if (detStrings.includes(attr)) {
+                errors.push('Тривиальная функциональная зависимость!');
+                determinant.classList.add('error');
+                func.classList.add('error');
+                break; // Достаточно найти один совпадающий атрибут
+            }
         }
     }
     
