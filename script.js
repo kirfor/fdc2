@@ -13,7 +13,7 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     errorMessage.textContent = '';
     
     // Функция проверки последовательности строк
-    const validateSequence = (value, fieldName, checkDuplicates = false) => {
+    const validateSequence = (value, fieldName, isDeterminant = false) => {
         // Проверка на пустую строку
         if (!value.trim()) {
             return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
@@ -27,11 +27,14 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
             return { valid: false, message: `${fieldName}: Между строками должна быть хотя бы одна запятая!` };
         }
         
-        // Проверка на повторяющиеся строки (только для детерминанты)
-        if (checkDuplicates) {
-            const uniqueStrings = [...new Set(strings)];
-            if (uniqueStrings.length !== strings.length) {
-                return { valid: false, message: `Повторяющиеся атрибуты в детерминанте!` };
+        // Проверка на повторяющиеся строки только для детерминанты
+        if (isDeterminant) {
+            const seen = {};
+            for (const str of strings) {
+                if (seen[str]) {
+                    return { valid: false, message: `Повторяющиеся атрибуты в детерминанте!` };
+                }
+                seen[str] = true;
             }
         }
         
