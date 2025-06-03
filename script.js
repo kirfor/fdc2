@@ -13,19 +13,22 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     
     // Функция проверки последовательности строк
     const validateSequence = (value, fieldName) => {
-        // Проверка на пустую строку после удаления всех разделителей
-        if (!value.replace(/[,\s]/g, '')) {
+        // Проверка на пустую строку
+        if (!value.trim()) {
             return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
         }
         
-        // Разбиваем на строки, учитывая разделители
-        const strings = value.split(/[,\s]+/).filter(s => s !== '');
+        // Проверка, что есть хотя бы одна запятая (если больше одной строки)
+        const strings = value.split(',').map(s => s.trim()).filter(s => s !== '');
+        if (strings.length > 1 && !/,/.test(value)) {
+            return { valid: false, message: `${fieldName}: Между строками должна быть хотя бы одна запятая!` };
+        }
         
         // Проверка каждой строки
         for (const str of strings) {
-            // Проверка на запрещённые символы (запятые или пробелы внутри строк)
-            if (/[, ]/.test(str)) {
-                return { valid: false, message: `${fieldName}: Строка "${str}" содержит запрещённые символы (пробел или запятую)!` };
+            // Проверка на запрещённые символы (пробелы внутри строк)
+            if (/\s/.test(str)) {
+                return { valid: false, message: `${fieldName}: Строка "${str}" содержит пробелы!` };
             }
             
             // Проверка длины строки
