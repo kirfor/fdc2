@@ -13,32 +13,28 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     
     // Функция проверки последовательности строк
     const validateSequence = (value, fieldName) => {
-        // Проверка на наличие запрещённых символов (пробел или запятая внутри строк)
-        if (/[,\s]/.test(value.replace(/^[,\s]+|[,\s]+$/g, ''))) {
-            return { valid: false, message: `${fieldName}: Строки не могут содержать пробелы или запятые!` };
-        }
-        
-        // Удаляем лишние разделители в начале/конце
-        const trimmedValue = value.replace(/^[,\s]+|[,\s]+$/g, '');
-        
-        // Проверка на пустую строку
-        if (trimmedValue === '') {
+        // Проверка на пустую строку после удаления всех разделителей
+        if (!value.replace(/[,\s]/g, '')) {
             return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
         }
         
-        // Разбиваем на строки
-        const strings = trimmedValue.split(/[,\s]+/);
+        // Разбиваем на строки, учитывая разделители
+        const strings = value.split(/[,\s]+/).filter(s => s !== '');
         
         // Проверка каждой строки
         for (const str of strings) {
-            if (str.length === 0) continue;
+            // Проверка на запрещённые символы (запятые или пробелы внутри строк)
+            if (/[, ]/.test(str)) {
+                return { valid: false, message: `${fieldName}: Строка "${str}" содержит запрещённые символы (пробел или запятую)!` };
+            }
             
+            // Проверка длины строки
             if (str.length > 5) {
                 return { valid: false, message: `${fieldName}: Строка "${str}" слишком длинная (макс. 5 символов)!` };
             }
         }
         
-        return { valid: true, strings: strings.filter(s => s !== '') };
+        return { valid: true, strings: strings };
     };
     
     // Проверка обоих полей
