@@ -11,39 +11,34 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     errorMessage.style.display = 'none';
     errorMessage.textContent = '';
     
-    // Функция проверки последовательности
+    // Функция проверки последовательности строк
     const validateSequence = (value, fieldName) => {
-        // Проверка на нечисловые символы (кроме пробелов и запятых)
-        if (/[^\d\s,]/.test(value)) {
-            return { valid: false, message: `${fieldName}: Допустимы только цифры, пробелы и запятые!` };
+        // Проверка на наличие запрещённых символов (пробел или запятая внутри строк)
+        if (/[,\s]/.test(value.replace(/^[,\s]+|[,\s]+$/g, ''))) {
+            return { valid: false, message: `${fieldName}: Строки не могут содержать пробелы или запятые!` };
         }
         
-        // Удаляем пробелы в начале и конце
-        const trimmedValue = value.trim();
+        // Удаляем лишние разделители в начале/конце
+        const trimmedValue = value.replace(/^[,\s]+|[,\s]+$/g, '');
         
-        // Проверка на наличие хотя бы одного числа
-        if (!/\d/.test(trimmedValue)) {
-            return { valid: false, message: `${fieldName}: Введите хотя бы одно число!` };
+        // Проверка на пустую строку
+        if (trimmedValue === '') {
+            return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
         }
         
-        // Проверка на пробелы между числами без запятых
-        if (/(?<=\d)\s+(?=\d)/.test(trimmedValue)) {
-            return { valid: false, message: `${fieldName}: Между числами должны быть запятые!` };
-        }
+        // Разбиваем на строки
+        const strings = trimmedValue.split(/[,\s]+/);
         
-        // Извлекаем все числа (игнорируя пробелы и лишние запятые)
-        const numbers = trimmedValue.split(/[\s,]+/)
-            .filter(num => num !== '' && !isNaN(num))
-            .map(num => parseInt(num, 10));
-        
-        // Проверка каждого числа
-        for (const num of numbers) {
-            if (num < 1 || num > 254) {
-                return { valid: false, message: `${fieldName}: Числа должны быть от 1 до 254!` };
+        // Проверка каждой строки
+        for (const str of strings) {
+            if (str.length === 0) continue;
+            
+            if (str.length > 5) {
+                return { valid: false, message: `${fieldName}: Строка "${str}" слишком длинная (макс. 5 символов)!` };
             }
         }
         
-        return { valid: true, numbers: numbers };
+        return { valid: true, strings: strings.filter(s => s !== '') };
     };
     
     // Проверка обоих полей
@@ -66,5 +61,5 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     }
     
     // Если все проверки пройдены
-    alert(`Проверка успешна!\nДетерминанта: ${validationDet.numbers.join(', ')}\nФункция: ${validationFunc.numbers.join(', ')}`);
+    alert(`Проверка успешна!\nДетерминанта: ${validationDet.strings.join(', ')}\nФункция: ${validationFunc.strings.join(', ')}`);
 });
