@@ -66,13 +66,24 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     if (!validationDet.valid) errors.push(validationDet.message);
     if (!validationFunc.valid) errors.push(validationFunc.message);
     
+    // Проверка на тривиальную зависимость (если нет других ошибок)
+    if (errors.length === 0) {
+        const detSet = new Set(validationDet.strings);
+        const funcSet = new Set(validationFunc.strings);
+        
+        // Проверяем есть ли общие элементы
+        const intersection = [...funcSet].filter(x => detSet.has(x));
+        if (intersection.length > 0) {
+            errors.push('Тривиальная функциональная зависимость!');
+            determinant.classList.add('error');
+            func.classList.add('error');
+        }
+    }
+    
     // Показываем ошибки
     if (errors.length > 0) {
         errorMessage.textContent = errors.join(' ');
         errorMessage.style.display = 'block';
-        
-        if (!validationDet.valid) determinant.classList.add('error');
-        if (!validationFunc.valid) func.classList.add('error');
         return;
     }
     
