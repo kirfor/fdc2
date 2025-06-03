@@ -13,7 +13,7 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     errorMessage.textContent = '';
     
     // Функция проверки последовательности строк
-    const validateSequence = (value, fieldName, isDeterminant = false) => {
+    const validateSequence = (value, fieldName) => {
         // Проверка на пустую строку
         if (!value.trim()) {
             return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
@@ -27,15 +27,18 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
             return { valid: false, message: `${fieldName}: Между строками должна быть хотя бы одна запятая!` };
         }
         
-        // Проверка на повторяющиеся строки только для детерминанты
-        if (isDeterminant) {
-            const seen = {};
-            for (const str of strings) {
-                if (seen[str]) {
-                    return { valid: false, message: `Повторяющиеся атрибуты в детерминанте!` };
-                }
-                seen[str] = true;
+        // Проверка на повторяющиеся строки
+        const seen = {};
+        for (const str of strings) {
+            if (seen[str]) {
+                return { 
+                    valid: false, 
+                    message: fieldName === 'Детерминанта' 
+                        ? 'Повторяющиеся атрибуты в детерминанте!' 
+                        : 'Функция содержит повторяющиеся атрибуты!'
+                };
             }
+            seen[str] = true;
         }
         
         // Проверка каждой строки
@@ -54,8 +57,8 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
         return { valid: true, strings: strings };
     };
     
-    // Проверка обоих полей (для детерминанты включаем проверку на дубликаты)
-    const validationDet = validateSequence(determinant.value, 'Детерминанта', true);
+    // Проверка обоих полей
+    const validationDet = validateSequence(determinant.value, 'Детерминанта');
     const validationFunc = validateSequence(func.value, 'Функция');
     
     // Собираем ошибки
