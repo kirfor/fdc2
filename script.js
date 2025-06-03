@@ -13,7 +13,7 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     errorMessage.textContent = '';
     
     // Функция проверки последовательности строк
-    const validateSequence = (value, fieldName) => {
+    const validateSequence = (value, fieldName, checkDuplicates = false) => {
         // Проверка на пустую строку
         if (!value.trim()) {
             return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
@@ -25,6 +25,14 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
         // Проверка, что если строк больше одной, то в вводе была хотя бы одна запятая
         if (strings.length > 1 && !/,/.test(value)) {
             return { valid: false, message: `${fieldName}: Между строками должна быть хотя бы одна запятая!` };
+        }
+        
+        // Проверка на повторяющиеся строки (только для детерминанты)
+        if (checkDuplicates) {
+            const uniqueStrings = [...new Set(strings)];
+            if (uniqueStrings.length !== strings.length) {
+                return { valid: false, message: `Повторяющиеся атрибуты в детерминанте!` };
+            }
         }
         
         // Проверка каждой строки
@@ -43,8 +51,8 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
         return { valid: true, strings: strings };
     };
     
-    // Проверка обоих полей
-    const validationDet = validateSequence(determinant.value, 'Детерминанта');
+    // Проверка обоих полей (для детерминанты включаем проверку на дубликаты)
+    const validationDet = validateSequence(determinant.value, 'Детерминанта', true);
     const validationFunc = validateSequence(func.value, 'Функция');
     
     // Собираем ошибки
