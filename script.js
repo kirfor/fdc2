@@ -74,6 +74,26 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
         }
     }
     
+    // Проверка на существующую ФЗ в таблице (только если нет других ошибок)
+    if (errors.length === 0) {
+        const detStr = validationDet.strings.sort().join(',');
+        const funcStr = validationFunc.strings.sort().join(',');
+        
+        const rows = resultsBody.querySelectorAll('tr');
+        for (const row of rows) {
+            const cells = row.querySelectorAll('td');
+            const rowDet = cells[0].textContent.split(',').map(s => s.trim()).sort().join(',');
+            const rowFunc = cells[1].textContent.split(',').map(s => s.trim()).sort().join(',');
+            
+            if (rowDet === detStr && rowFunc === funcStr) {
+                errors.push('Такая ФЗ уже есть!');
+                determinant.classList.add('error');
+                func.classList.add('error');
+                break;
+            }
+        }
+    }
+    
     // Показываем ошибки
     if (errors.length > 0) {
         errorMessage.textContent = errors.join(' ');
