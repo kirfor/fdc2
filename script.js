@@ -30,7 +30,7 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
                 return { 
                     valid: false, 
                     message: fieldName === 'Детерминанта' 
-                        ? 'Повторяющиеся атрибуты в детерминанте!' 
+                        ? 'Детерминанта содержит повторяющиеся атрибуты!' 
                         : 'Функция содержит повторяющиеся атрибуты!'
                 };
             }
@@ -64,13 +64,12 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
         const detStrings = validationDet.strings;
         const funcStrings = validationFunc.strings;
         
-        // Проверяем каждый атрибут функции на наличие в детерминанте
         for (const attr of funcStrings) {
             if (detStrings.includes(attr)) {
                 errors.push('Тривиальная функциональная зависимость!');
                 determinant.classList.add('error');
                 func.classList.add('error');
-                break; // Достаточно найти один совпадающий атрибут
+                break;
             }
         }
     }
