@@ -6,17 +6,15 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
     const errorMessage = document.getElementById('error-message');
     const resultsBody = document.getElementById('results-body');
     
-    // Сбрасываем предыдущие ошибки
+    // Сброс ошибок
     determinant.classList.remove('error');
     func.classList.remove('error');
     errorMessage.style.display = 'none';
     errorMessage.textContent = '';
     
-    // Функция проверки последовательности строк
+    // Функция валидации
     const validateSequence = (value, fieldName) => {
-        if (!value.trim()) {
-            return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
-        }
+        if (!value.trim()) return { valid: false, message: `${fieldName}: Введите хотя бы одну строку!` };
         
         const strings = value.split(',').map(s => s.trim()).filter(s => s !== '');
         
@@ -24,97 +22,84 @@ document.getElementById('textForm').addEventListener('submit', function(e) {
             return { valid: false, message: `${fieldName}: Между строками должна быть хотя бы одна запятая!` };
         }
         
-        const seen = {};
-        for (const str of strings) {
-            if (seen[str]) {
-                return { 
-                    valid: false, 
-                    message: fieldName === 'Детерминанта' 
-                        ? 'Детерминанта содержит повторяющиеся атрибуты!' 
-                        : 'Функция содержит повторяющиеся атрибуты!'
-                };
-            }
-            seen[str] = true;
+        // Проверка на дубликаты
+        const duplicates = strings.filter((item, index) => strings.indexOf(item) !== index);
+        if (duplicates.length > 0) {
+            return {
+                valid: false,
+                message: fieldName === 'Детерминанта' 
+                    ? 'Детерминанта содержит повторяющиеся атрибуты!' 
+                    : 'Функция содержит повторяющиеся атрибуты!'
+            };
         }
         
+        // Проверка формата строк
         for (const str of strings) {
-            if (/\s/.test(str)) {
-                return { valid: false, message: `${fieldName}: Строка "${str}" содержит пробелы!` };
-            }
-            
-            if (str.length > 5) {
-                return { valid: false, message: `${fieldName}: Строка "${str}" слишком длинная (макс. 5 символов)!` };
-            }
+            if (/\s/.test(str)) return { valid: false, message: `${fieldName}: Строка "${str}" содержит пробелы!` };
+            if (str.length > 5) return { valid: false, message: `${fieldName}: Строка "${str}" слишком длинная!` };
         }
         
-        return { valid: true, strings: strings };
+        return { valid: true, strings: strings.sort() }; // Сортируем для единообразия
     };
     
-    // Проверка обоих полей
+    // Валидация полей
     const validationDet = validateSequence(determinant.value, 'Детерминанта');
     const validationFunc = validateSequence(func.value, 'Функция');
     
-    // Собираем ошибки
+    // Сбор ошибок
     const errors = [];
     if (!validationDet.valid) errors.push(validationDet.message);
     if (!validationFunc.valid) errors.push(validationFunc.message);
     
-    // Проверка на тривиальную зависимость (только если нет других ошибок)
+    // Проверка тривиальной зависимости
     if (errors.length === 0) {
-        const detStrings = validationDet.strings;
-        const funcStrings = validationFunc.strings;
-        
-        for (const attr of funcStrings) {
-            if (detStrings.includes(attr)) {
-                errors.push('Тривиальная функциональная зависимость!');
-                determinant.classList.add('error');
-                func.classList.add('error');
-                break;
-            }
+        const common = validationDet.strings.filter(attr => validationFunc.strings.includes(attr));
+        if (common.length > 0) {
+            errors.push('Тривиальная функциональная зависимость!');
+            determinant.classList.add('error');
+            func.classList.add('error');
         }
     }
     
-    // Проверка на существующую ФЗ в таблице (только если нет других ошибок)
+    // Проверка существующей ФЗ
     if (errors.length === 0) {
-        const detStr = validationDet.strings.sort().join(',');
-        const funcStr = validationFunc.strings.sort().join(',');
+        const detKey = validationDet.strings.join(',');
+        const funcKey = validationFunc.strings.join(',');
         
-        const rows = resultsBody.querySelectorAll('tr');
-        for (const row of rows) {
+        const existingRows = Array.from(resultsBody.querySelectorAll('tr'));
+        const isDuplicate = existingRows.some(row => {
             const cells = row.querySelectorAll('td');
-            const rowDet = cells[0].textContent.split(',').map(s => s.trim()).sort().join(',');
-            const rowFunc = cells[1].textContent.split(',').map(s => s.trim()).sort().join(',');
-            
-            if (rowDet === detStr && rowFunc === funcStr) {
-                errors.push('Такая ФЗ уже есть!');
-                determinant.classList.add('error');
-                func.classList.add('error');
-                break;
-            }
+            return cells[0].textContent.replace(/\s/g, '') === detKey && 
+                   cells[1].textContent.replace(/\s/g, '') === funcKey;
+        });
+        
+        if (isDuplicate) {
+            errors.push('Такая ФЗ уже есть!');
+            determinant.classList.add('error');
+            func.classList.add('error');
         }
     }
     
-    // Показываем ошибки
+    // Обработка ошибок
     if (errors.length > 0) {
         errorMessage.textContent = errors.join(' ');
         errorMessage.style.display = 'block';
         return;
     }
     
-    // Если все проверки пройдены - добавляем данные в таблицу
-    const row = document.createElement('tr');
-    
+    // Добавление новой ФЗ
+    const newRow = document.createElement('tr');
     const detCell = document.createElement('td');
-    detCell.textContent = validationDet.strings.join(', ');
-    row.appendChild(detCell);
-    
     const funcCell = document.createElement('td');
+    
+    detCell.textContent = validationDet.strings.join(', ');
     funcCell.textContent = validationFunc.strings.join(', ');
-    row.appendChild(funcCell);
     
-    resultsBody.appendChild(row);
+    newRow.appendChild(detCell);
+    newRow.appendChild(funcCell);
+    resultsBody.appendChild(newRow);
     
-    // Очищаем поля ввода
+    // Очистка полей
     determinant.value = '';
     func.value = '';
 });
